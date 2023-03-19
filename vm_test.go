@@ -66,7 +66,7 @@ func TestAfterVMCreationShouldBePresent(t *testing.T) {
 	}
 
 	updatedVM, err := fetchedVM.Update(
-		ovirtclient.UpdateVMParams().MustWithName("new_name").MustWithComment("new comment"),
+		ovirtclient.UpdateVMParams().MustWithName("new_name").MustWithComment("new comment").MustWithDescription("new description"),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -79,6 +79,9 @@ func TestAfterVMCreationShouldBePresent(t *testing.T) {
 	}
 	if updatedVM.Comment() != "new comment" {
 		t.Fatalf("updated VM comment %s does not match update parameters", updatedVM.Comment())
+	}
+	if updatedVM.Description() != "new description" {
+		t.Fatalf("updated VM description %s does not match update parameters", updatedVM.Description())
 	}
 
 	fetchedVM, err = client.GetVM(vm.ID())
@@ -93,6 +96,9 @@ func TestAfterVMCreationShouldBePresent(t *testing.T) {
 	}
 	if fetchedVM.Comment() != "new comment" {
 		t.Fatalf("updated VM comment %s does not match update parameters", fetchedVM.Comment())
+	}
+	if fetchedVM.Description() != "new description" {
+		t.Fatalf("updated VM description %s does not match update parameters", fetchedVM.Description())
 	}
 }
 
@@ -228,6 +234,24 @@ func TestVMCreationWithInit(t *testing.T) {
 	if vm2.Initialization().HostName() != "test-vm" {
 		t.Fatalf("got Unexpected output from the HostName (%s) init field ", vm2.Initialization().HostName())
 	}
+}
+
+func TestVMCreationWithDescription(t *testing.T) {
+	t.Parallel()
+	testDescription := "test description"
+	helper := getHelper(t)
+	vm := assertCanCreateVM(
+		t,
+		helper,
+		fmt.Sprintf("test-%s", helper.GenerateRandomID(5)),
+		ovirtclient.CreateVMParams().MustWithDescription(testDescription),
+	)
+
+	description := vm.Description()
+	if description != testDescription {
+		t.Fatalf("Creating a VM with Description settings did not return a VM with expected Description , %s , %s.", description, testDescription)
+	}
+
 }
 
 // TestVMStartStop creates a micro VM with a tiny operating system, starts it and then stops it. The OS doesn't support

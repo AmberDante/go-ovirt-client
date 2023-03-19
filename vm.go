@@ -717,6 +717,11 @@ type BuildableVMParameters interface {
 	// MustWithComment is identical to WithComment, but panics instead of returning an error.
 	MustWithComment(comment string) BuildableVMParameters
 
+	// WithDescriptiont adds a common to the VM.
+	WithDescription(description string) (BuildableVMParameters, error)
+	// MustWithDescription is identical to WithDescription, but panics instead of returning an error.
+	MustWithDescription(descriptiont string) BuildableVMParameters
+
 	// WithCPU adds a VMCPUTopo to the VM.
 	WithCPU(cpu VMCPUParams) (BuildableVMParameters, error)
 	// MustWithCPU adds a VMCPUTopo and panics if an error happens.
@@ -1381,6 +1386,8 @@ type UpdateVMParameters interface {
 	Name() *string
 	// Comment returns the comment for the VM. Return nil if the name should not be changed.
 	Comment() *string
+	// Description returns the description for the VM. Return nil if the name should not be changed.
+	Description() *string
 }
 
 // VMCPUTopo contains the CPU topology information about a VM.
@@ -1464,6 +1471,12 @@ type BuildableUpdateVMParameters interface {
 
 	// MustWithComment is identical to WithComment, but panics instead of returning an error.
 	MustWithComment(comment string) BuildableUpdateVMParameters
+
+	// WithDescription adds a description to the request
+	WithDescription(description string) (BuildableUpdateVMParameters, error)
+
+	// MustWithDescription is identical to WithDescription, but panics instead of returning an error.
+	MustWithDescription(comment string) BuildableUpdateVMParameters
 }
 
 // UpdateVMParams returns a buildable set of update parameters.
@@ -1472,8 +1485,9 @@ func UpdateVMParams() BuildableUpdateVMParameters {
 }
 
 type updateVMParams struct {
-	name    *string
-	comment *string
+	name        *string
+	comment     *string
+	description *string
 }
 
 func (u *updateVMParams) MustWithName(name string) BuildableUpdateVMParameters {
@@ -1492,12 +1506,24 @@ func (u *updateVMParams) MustWithComment(comment string) BuildableUpdateVMParame
 	return builder
 }
 
+func (u *updateVMParams) MustWithDescription(description string) BuildableUpdateVMParameters {
+	builder, err := u.WithDescription(description)
+	if err != nil {
+		panic(err)
+	}
+	return builder
+}
+
 func (u *updateVMParams) Name() *string {
 	return u.name
 }
 
 func (u *updateVMParams) Comment() *string {
 	return u.comment
+}
+
+func (u *updateVMParams) Description() *string {
+	return u.description
 }
 
 func (u *updateVMParams) WithName(name string) (BuildableUpdateVMParameters, error) {
@@ -1510,6 +1536,11 @@ func (u *updateVMParams) WithName(name string) (BuildableUpdateVMParameters, err
 
 func (u *updateVMParams) WithComment(comment string) (BuildableUpdateVMParameters, error) {
 	u.comment = &comment
+	return u, nil
+}
+
+func (u *updateVMParams) WithDescription(description string) (BuildableUpdateVMParameters, error) {
+	u.description = &description
 	return u, nil
 }
 
@@ -1808,6 +1839,13 @@ func (v *vmParams) MustWithComment(comment string) BuildableVMParameters {
 	}
 	return builder
 }
+func (v *vmParams) MustWithDescription(description string) BuildableVMParameters {
+	builder, err := v.WithDescription(description)
+	if err != nil {
+		panic(err)
+	}
+	return builder
+}
 
 func (v *vmParams) WithName(name string) (BuildableVMParameters, error) {
 	if err := validateVMName(name); err != nil {
@@ -1819,6 +1857,11 @@ func (v *vmParams) WithName(name string) (BuildableVMParameters, error) {
 
 func (v *vmParams) WithComment(comment string) (BuildableVMParameters, error) {
 	v.comment = comment
+	return v, nil
+}
+
+func (v *vmParams) WithDescription(description string) (BuildableVMParameters, error) {
+	v.description = description
 	return v, nil
 }
 
@@ -2000,6 +2043,34 @@ func (v *vm) withComment(comment string) *vm {
 		v.name,
 		comment,
 		v.description,
+		v.clusterID,
+		v.templateID,
+		v.status,
+		v.cpu,
+		v.memory,
+		v.tagIDs,
+		v.hugePages,
+		v.initialization,
+		v.hostID,
+		v.placementPolicy,
+		v.memoryPolicy,
+		v.instanceTypeID,
+		v.vmType,
+		v.os,
+		v.serialConsole,
+		v.soundcardEnabled,
+	}
+}
+
+// withDescription returns a copy of the VM with the new comment. It does not change the original copy to avoid
+// shared state issues.
+func (v *vm) withDescription(description string) *vm {
+	return &vm{
+		v.client,
+		v.id,
+		v.name,
+		v.comment,
+		description,
 		v.clusterID,
 		v.templateID,
 		v.status,
