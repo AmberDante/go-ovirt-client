@@ -206,6 +206,8 @@ type VMData interface {
 	Name() string
 	// Comment is the comment added to the VM.
 	Comment() string
+	// Description is the description added to the VM.
+	Description() string
 	// ClusterID returns the cluster this machine belongs to.
 	ClusterID() ClusterID
 	// TemplateID returns the ID of the base template for this machine.
@@ -660,6 +662,9 @@ func (v *vmSearchParams) WithNotStatuses(list VMStatusList) BuildableVMSearchPar
 type OptionalVMParameters interface {
 	// Comment returns the comment for the VM.
 	Comment() string
+
+	// Description returns the description for the VM.
+	Description() string
 
 	// CPU contains the CPU topology, if any.
 	CPU() VMCPUParams
@@ -1524,9 +1529,10 @@ func CreateVMParams() BuildableVMParameters {
 type vmParams struct {
 	lock *sync.Mutex
 
-	name    string
-	comment string
-	cpu     VMCPUParams
+	name        string
+	comment     string
+	description string
+	cpu         VMCPUParams
 
 	hugePages *VMHugePages
 
@@ -1824,12 +1830,17 @@ func (v vmParams) Comment() string {
 	return v.comment
 }
 
+func (v vmParams) Description() string {
+	return v.description
+}
+
 type vm struct {
 	client Client
 
 	id               VMID
 	name             string
 	comment          string
+	description      string
 	clusterID        ClusterID
 	templateID       TemplateID
 	status           VMStatus
@@ -1960,6 +1971,7 @@ func (v *vm) withName(name string) *vm {
 		v.id,
 		name,
 		v.comment,
+		v.description,
 		v.clusterID,
 		v.templateID,
 		v.status,
@@ -1987,6 +1999,7 @@ func (v *vm) withComment(comment string) *vm {
 		v.id,
 		v.name,
 		comment,
+		v.description,
 		v.clusterID,
 		v.templateID,
 		v.status,
@@ -2058,6 +2071,10 @@ func (v *vm) Comment() string {
 	return v.comment
 }
 
+func (v *vm) Description() string {
+	return v.description
+}
+
 func (v *vm) ClusterID() ClusterID {
 	return v.clusterID
 }
@@ -2114,6 +2131,7 @@ func convertSDKVM(sdkObject *ovirtsdk.Vm, client Client) (VM, error) {
 		vmIDConverter,
 		vmNameConverter,
 		vmCommentConverter,
+		vmDescriptionConverter,
 		vmClusterConverter,
 		vmStatusConverter,
 		vmTemplateConverter,
@@ -2280,6 +2298,15 @@ func vmCommentConverter(sdkObject *ovirtsdk.Vm, v *vm) error {
 		return newError(EFieldMissing, "comment field missing from VM object")
 	}
 	v.comment = comment
+	return nil
+}
+
+func vmDescriptionConverter(sdkObject *ovirtsdk.Vm, v *vm) error {
+	description, ok := sdkObject.Description()
+	if !ok {
+		return newError(EFieldMissing, "description field missing from VM object")
+	}
+	v.description = description
 	return nil
 }
 
