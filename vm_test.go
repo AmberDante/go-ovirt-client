@@ -110,6 +110,7 @@ func TestVMCreationWithCPU(t *testing.T) {
 	}
 	for name, param := range params {
 		t.Run(name, func(t *testing.T) {
+			param := param
 			t.Parallel()
 			helper := getHelper(t)
 			vm := assertCanCreateVM(
