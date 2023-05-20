@@ -1,4 +1,4 @@
-module github.com/ovirt/go-ovirt-client/v3
+module github.com/AmberDante/go-ovirt-client/v3
 
 go 1.16
 
@@ -8,3 +8,5 @@ require (
 	github.com/ovirt/go-ovirt-client-log/v3 v3.0.0
 	github.com/stretchr/testify v1.7.0 // indirect
 )
+
+replace github.com/ovirt/go-ovirt-client/v3 v3.0.0-alpha1 => github.com/AmberDante/go-ovirt-client/v3 v3.0.1-alpha1
